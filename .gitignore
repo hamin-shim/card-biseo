@@ -1,0 +1,4 @@
+.env
+telegram_raw.json
+__pycache__/
+*.pyc

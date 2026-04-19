@@ -813,6 +813,30 @@ if ('serviceWorker' in navigator) {
 loadState();
 updateMonthBadge();
 renderAll();
+
+// data.json (Claude가 Telegram 파싱 후 푸시하는 파일) 자동 로드
+fetch('./data.json?t=' + Date.now())
+  .then(r => r.ok ? r.json() : null)
+  .then(remote => {
+    if (!remote) return;
+    // 원격 트랜잭션과 로컬 트랜잭션을 합치되 중복 제거
+    const localIds = new Set(state.이번달사용.map(t => `${t.date}_${t.cardId}_${t.amount}_${t.category}`));
+    const newTxs = (remote.이번달사용 || []).filter(t =>
+      !localIds.has(`${t.date}_${t.cardId}_${t.amount}_${t.category}`)
+    );
+    if (newTxs.length > 0) {
+      state.이번달사용 = [...state.이번달사용, ...newTxs];
+    }
+    // 지난달 실적은 원격값이 있으면 덮어쓰기
+    if (remote.지난달실적) {
+      Object.assign(state.지난달실적, remote.지난달실적);
+    }
+    if (newTxs.length > 0 || remote.지난달실적) {
+      saveState();
+      renderAll();
+    }
+  })
+  .catch(() => {});
 </script>
 </body>
 </html>
