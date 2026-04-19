@@ -25,7 +25,7 @@ cd card-biseo
 ### 2. .env 파일 생성 (GitHub에 없음 — 직접 입력)
 
 ```bash
-echo "BOT_TOKEN=8572009690:AAHiLewVB1fG7NQabNhpSjWmYYUsIbG9pfs" > .env
+echo "BOT_TOKEN=여기에_BotFather에서_발급받은_토큰_입력" > .env
 ```
 
 > ⚠️ 토큰 분실 시: 텔레그램 @BotFather → `/revoke` → 재발급
