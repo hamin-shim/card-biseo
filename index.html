@@ -120,6 +120,20 @@
     .cp-pct { font-size: 11px; font-weight: 700; }
     .cp-remain { font-size: 11px; color: var(--text2); }
     .cp-this-month { font-size: 11px; color: var(--text2); margin-top: 4px; }
+    .card-progress { cursor: pointer; transition: border-color 0.15s; }
+    .card-progress:active { opacity: 0.85; }
+    .cp-chevron { font-size: 12px; color: var(--text2); transition: transform 0.2s; display: inline-block; }
+    .cp-chevron.open { transform: rotate(180deg); }
+    .cp-benefits { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); }
+    .cp-benefits.open { display: block; }
+    .benefit-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+    .benefit-row:last-child { border-bottom: none; }
+    .benefit-cat { font-size: 12px; color: var(--text2); }
+    .benefit-right { text-align: right; }
+    .benefit-val { font-size: 12px; font-weight: 700; }
+    .benefit-note { font-size: 10px; color: var(--text2); margin-top: 1px; }
+    .benefit-limit { font-size: 10px; color: var(--accent); margin-top: 1px; }
+    .cp-memo { font-size: 11px; color: var(--text2); margin-top: 8px; padding: 6px 10px; background: var(--surface2); border-radius: 8px; line-height: 1.5; }
 
     /* FAB */
     .fab {
@@ -555,36 +569,83 @@ function renderRec() {
   `;
 }
 
+function buildBenefitRows(card) {
+  const catMap = Object.fromEntries(CATEGORIES.map(c => [c.id, c.emoji]));
+  const rows = Object.entries(card.혜택).map(([catId, b]) => {
+    let valText = '';
+    if (b.type === '할인')       valText = `${fmtPct(b.rate)} 할인`;
+    else if (b.type === '적립')  valText = `${fmtPct(b.rate)} 적립`;
+    else if (b.type === '정액할인') valText = `${fmtWon(b.amount)} 할인`;
+    const limitText = b.월한도 ? `월 최대 ${fmtWon(b.월한도)}` : '';
+    const noteText  = b.비고 || '';
+    const used = getBenefitUsed(card.id, catId);
+    const exhausted = b.월한도 && used >= b.월한도;
+    return `
+      <div class="benefit-row">
+        <span class="benefit-cat">${catMap[catId] || '💳'} ${catId}</span>
+        <div class="benefit-right">
+          <div class="benefit-val" style="${exhausted ? 'text-decoration:line-through;color:var(--text2)' : ''}">${valText}</div>
+          ${limitText ? `<div class="benefit-limit">${exhausted ? '⚠ 한도 소진' : limitText}</div>` : ''}
+          ${noteText  ? `<div class="benefit-note">${noteText}</div>` : ''}
+        </div>
+      </div>`;
+  });
+
+  if (card.기본rate > 0 && Object.keys(card.혜택).length > 0) {
+    rows.push(`
+      <div class="benefit-row">
+        <span class="benefit-cat">💳 그 외 전 가맹점</span>
+        <div class="benefit-right"><div class="benefit-val">${fmtPct(card.기본rate)} 적립</div></div>
+      </div>`);
+  }
+
+  if (rows.length === 0) {
+    rows.push(`<div style="font-size:12px;color:var(--text2);padding:6px 0">혜택 정보 미입력</div>`);
+  }
+
+  return rows.join('');
+}
+
 function renderProgress() {
   document.getElementById('progressBars').innerHTML = CARDS.map(card => {
     const thisMonth = getThisMonthSpend(card.id);
     const lastMonth = state.지난달실적[card.id] || 0;
-    const target = card.실적조건;
+    const target    = card.실적조건;
+
+    const benefitSection = `
+      <div class="cp-benefits" id="benefits_${card.id}">
+        ${buildBenefitRows(card)}
+        ${card.메모 ? `<div class="cp-memo">${card.메모}</div>` : ''}
+      </div>`;
 
     if (target === 0) {
-      const warnHtml = card.메모?.startsWith('⚠️')
-        ? `<div class="alert-box alert-warning" style="display:block;margin-top:6px;font-size:11px">${card.메모}</div>` : '';
       return `
-        <div class="card-progress">
+        <div class="card-progress" onclick="toggleBenefits('${card.id}')">
           <div class="cp-header">
             <span class="cp-name" style="color:${card.color}">${card.name}</span>
-            <span class="cp-amount">실적 조건 없음</span>
+            <span style="display:flex;gap:8px;align-items:center">
+              <span class="cp-amount">실적 조건 없음</span>
+              <span class="cp-chevron" id="chevron_${card.id}">▾</span>
+            </span>
           </div>
           <div class="cp-this-month">이번달 사용: ${fmtWon(thisMonth)}</div>
-          ${warnHtml}
+          ${benefitSection}
         </div>`;
     }
 
-    const pct = Math.min(100, Math.round((lastMonth / target) * 100));
-    const done = lastMonth >= target;
-    const cls = done ? 'bar-done' : pct >= 70 ? 'bar-near' : 'bar-low';
+    const pct      = Math.min(100, Math.round((lastMonth / target) * 100));
+    const done     = lastMonth >= target;
+    const cls      = done ? 'bar-done' : pct >= 70 ? 'bar-near' : 'bar-low';
     const pctColor = done ? 'var(--success)' : pct >= 70 ? 'var(--warning)' : 'var(--accent)';
 
     return `
-      <div class="card-progress">
+      <div class="card-progress" onclick="toggleBenefits('${card.id}')">
         <div class="cp-header">
           <span class="cp-name" style="color:${card.color}">${card.name}</span>
-          <span class="cp-amount">${fmtWon(lastMonth)} / ${fmtWon(target)}</span>
+          <span style="display:flex;gap:8px;align-items:center">
+            <span class="cp-amount">${fmtWon(lastMonth)} / ${fmtWon(target)}</span>
+            <span class="cp-chevron" id="chevron_${card.id}">▾</span>
+          </span>
         </div>
         <div class="bar-bg"><div class="bar-fill ${cls}" style="width:${pct}%"></div></div>
         <div class="cp-footer">
@@ -592,8 +653,14 @@ function renderProgress() {
           <span class="cp-remain">${done ? '혜택 정상 적용 중' : fmtWon(target - lastMonth) + ' 부족'}</span>
         </div>
         <div class="cp-this-month">이번달 사용: ${fmtWon(thisMonth)}</div>
+        ${benefitSection}
       </div>`;
   }).join('');
+}
+
+function toggleBenefits(cardId) {
+  document.getElementById('benefits_' + cardId)?.classList.toggle('open');
+  document.getElementById('chevron_'  + cardId)?.classList.toggle('open');
 }
 
 function renderAll() {
