@@ -148,7 +148,7 @@
 
     /* FAB */
     .fab {
-      position: fixed; bottom: 28px; right: 20px;
+      position: fixed; bottom: 76px; right: 20px;
       background: var(--accent); color: white;
       border: none; border-radius: 28px;
       padding: 16px 22px; font-size: 15px; font-weight: 700;
@@ -239,6 +239,56 @@
     .history-item-left { font-size: 13px; }
     .history-item-right { font-size: 13px; font-weight: 600; }
     .history-empty { color: var(--text2); text-align: center; padding: 20px; font-size: 13px; }
+
+    /* Bottom Tab Nav */
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 480px; margin: 0 auto;
+      display: flex; background: var(--surface); border-top: 1px solid rgba(255,255,255,0.07);
+      z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+    .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+      padding: 10px 0; cursor: pointer; border: none; background: none; color: var(--text2);
+      font-size: 10px; font-weight: 500; transition: color 0.15s; }
+    .nav-btn.active { color: var(--accent); }
+    .nav-btn .nav-icon { font-size: 20px; line-height: 1; }
+    .tab-panel { display: none; padding-bottom: 80px; }
+    .tab-panel.active { display: block; }
+
+    /* Ledger Calendar */
+    .cal-header { display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 16px 8px; }
+    .cal-title { font-size: 16px; font-weight: 700; }
+    .cal-nav { background: none; border: none; color: var(--text1); font-size: 20px;
+      cursor: pointer; padding: 4px 10px; }
+    .cal-summary { margin: 0 16px 12px; background: var(--surface);
+      border-radius: var(--radius); padding: 12px 16px;
+      display: flex; justify-content: space-between; align-items: center; }
+    .cal-summary-label { font-size: 11px; color: var(--text2); }
+    .cal-summary-amount { font-size: 18px; font-weight: 700; color: var(--accent); }
+    .cal-grid { display: grid; grid-template-columns: repeat(7,1fr);
+      gap: 2px; padding: 0 10px; }
+    .cal-dow { text-align: center; font-size: 10px; color: var(--text2);
+      padding: 4px 0; font-weight: 600; }
+    .cal-dow:first-child { color: #ff6b6b; }
+    .cal-dow:last-child { color: #74b9ff; }
+    .cal-day { min-height: 52px; border-radius: 8px; padding: 5px 4px;
+      cursor: pointer; transition: background 0.15s; display: flex;
+      flex-direction: column; align-items: center; gap: 2px; }
+    .cal-day:hover { background: rgba(255,255,255,0.06); }
+    .cal-day.has-txn { background: rgba(99,179,237,0.08); }
+    .cal-day.selected { background: rgba(99,179,237,0.22) !important; }
+    .cal-day.today .day-num { background: var(--accent); color: #000;
+      border-radius: 50%; width: 20px; height: 20px; display: flex;
+      align-items: center; justify-content: center; }
+    .day-num { font-size: 12px; font-weight: 500; }
+    .day-amt { font-size: 9px; color: var(--accent); font-weight: 600; line-height: 1.2; text-align: center; }
+    .cal-detail { margin: 10px 16px 0; background: var(--surface);
+      border-radius: var(--radius); padding: 12px 14px; display: none; }
+    .cal-detail.open { display: block; }
+    .cal-detail-title { font-size: 11px; color: var(--text2); margin-bottom: 8px; font-weight: 600; }
+    .cal-txn-row { display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
+    .cal-txn-row:last-child { border-bottom: none; }
+    .cal-txn-left { color: var(--text2); font-size: 11px; }
+    .cal-txn-right { font-weight: 600; }
   </style>
 </head>
 <body>
@@ -264,25 +314,58 @@
   </div>
 </div>
 
-<!-- Category Chips -->
-<div class="section">
-  <div class="section-title">어디서 결제하나요?</div>
-  <div class="chips" id="chips"></div>
+<!-- Tab: 홈 -->
+<div class="tab-panel active" id="tab-home">
+
+  <!-- Category Chips -->
+  <div class="section">
+    <div class="section-title">어디서 결제하나요?</div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <!-- Recommendation -->
+  <div class="rec-wrapper" id="recSection" style="display:none">
+    <div class="recommendation" id="recCard"></div>
+  </div>
+
+  <!-- 실적 현황 -->
+  <div class="section">
+    <div class="section-title">실적 현황</div>
+    <div id="progressBars"></div>
+  </div>
+
 </div>
 
-<!-- Recommendation -->
-<div class="rec-wrapper" id="recSection" style="display:none">
-  <div class="recommendation" id="recCard"></div>
-</div>
-
-<!-- 실적 현황 -->
-<div class="section">
-  <div class="section-title">실적 현황</div>
-  <div id="progressBars"></div>
+<!-- Tab: 가계부 -->
+<div class="tab-panel" id="tab-ledger">
+  <div class="cal-header">
+    <button class="cal-nav" onclick="calMove(-1)">‹</button>
+    <div class="cal-title" id="calTitle"></div>
+    <button class="cal-nav" onclick="calMove(1)">›</button>
+  </div>
+  <div class="cal-summary">
+    <div class="cal-summary-label">이번 달 총 지출</div>
+    <div class="cal-summary-amount" id="calTotal"></div>
+  </div>
+  <div class="cal-grid" id="calGrid"></div>
+  <div class="cal-detail" id="calDetail">
+    <div class="cal-detail-title" id="calDetailTitle"></div>
+    <div id="calDetailList"></div>
+  </div>
 </div>
 
 <!-- FAB -->
 <button class="fab" onclick="openAddModal()">＋ 결제 기록</button>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-home" onclick="switchTab('home')">
+    <span class="nav-icon">💳</span>추천
+  </button>
+  <button class="nav-btn" id="nav-ledger" onclick="switchTab('ledger')">
+    <span class="nav-icon">📅</span>가계부
+  </button>
+</nav>
 
 <!-- ============================================================ -->
 <!-- Modal: Add Transaction -->
@@ -745,6 +828,118 @@ function renderAll() {
   renderChips();
   renderRec();
   renderProgress();
+}
+
+// ================================================================
+// Tab Navigation
+// ================================================================
+function switchTab(name) {
+  ['home', 'ledger'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('active', t === name);
+    document.getElementById('nav-' + t).classList.toggle('active', t === name);
+  });
+  if (name === 'ledger') renderLedger();
+}
+
+// ================================================================
+// Ledger (가계부)
+// ================================================================
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth(); // 0-indexed
+let calSelected = null;
+
+function calMove(dir) {
+  calMonth += dir;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  if (calMonth < 0)  { calMonth = 11; calYear--; }
+  calSelected = null;
+  renderLedger();
+}
+
+function renderLedger() {
+  const today = new Date();
+  const txns = state.이번달사용;
+
+  // Group by date string
+  const byDate = {};
+  txns.forEach(t => {
+    const d = t.date; // "YYYY-MM-DD"
+    if (!d) return;
+    const [y, m] = d.split('-').map(Number);
+    if (y === calYear && m === calMonth + 1) {
+      if (!byDate[d]) byDate[d] = [];
+      byDate[d].push(t);
+    }
+  });
+
+  const monthTotal = Object.values(byDate).flat().reduce((s, t) => s + (t.amount || 0), 0);
+
+  document.getElementById('calTitle').textContent =
+    `${calYear}년 ${calMonth + 1}월`;
+  document.getElementById('calTotal').textContent = fmtWon(monthTotal);
+
+  // Calendar grid
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const firstDow = new Date(calYear, calMonth, 1).getDay(); // 0=Sun
+
+  const dows = ['일','월','화','수','목','금','토'];
+  let html = dows.map(d => `<div class="cal-dow">${d}</div>`).join('');
+
+  // Empty cells before 1st
+  for (let i = 0; i < firstDow; i++) html += `<div></div>`;
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const dayTxns = byDate[dateStr] || [];
+    const dayTotal = dayTxns.reduce((s, t) => s + (t.amount || 0), 0);
+    const isToday = today.getFullYear() === calYear && today.getMonth() === calMonth && today.getDate() === day;
+    const isSel = calSelected === dateStr;
+    const hasTxn = dayTxns.length > 0;
+
+    html += `<div class="cal-day${hasTxn ? ' has-txn' : ''}${isToday ? ' today' : ''}${isSel ? ' selected' : ''}"
+      onclick="selectDay('${dateStr}')">
+      <div class="day-num">${day}</div>
+      ${hasTxn ? `<div class="day-amt">${fmtWon(dayTotal).replace('원','')}</div>` : ''}
+    </div>`;
+  }
+
+  document.getElementById('calGrid').innerHTML = html;
+  renderCalDetail();
+}
+
+function selectDay(dateStr) {
+  calSelected = calSelected === dateStr ? null : dateStr;
+  renderLedger();
+}
+
+function renderCalDetail() {
+  const detail = document.getElementById('calDetail');
+  if (!calSelected) { detail.classList.remove('open'); return; }
+
+  const txns = state.이번달사용.filter(t => t.date === calSelected);
+  if (!txns.length) { detail.classList.remove('open'); return; }
+
+  const [, m, d] = calSelected.split('-');
+  document.getElementById('calDetailTitle').textContent = `${+m}월 ${+d}일 지출 내역`;
+
+  const total = txns.reduce((s, t) => s + (t.amount || 0), 0);
+  document.getElementById('calDetailList').innerHTML =
+    txns.map(t => {
+      const card = CARDS.find(c => c.id === t.cardId);
+      return `<div class="cal-txn-row">
+        <div>
+          <div>${t.memo || t.category}</div>
+          <div class="cal-txn-left">${card ? card.shortName : t.cardId} · ${t.category}</div>
+        </div>
+        <div class="cal-txn-right">${fmtWon(t.amount)}</div>
+      </div>`;
+    }).join('') +
+    `<div class="cal-txn-row" style="margin-top:4px">
+      <div style="font-weight:600">합계</div>
+      <div class="cal-txn-right" style="color:var(--accent)">${fmtWon(total)}</div>
+    </div>`;
+
+  detail.classList.add('open');
 }
 
 // ================================================================
