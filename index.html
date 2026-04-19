@@ -122,6 +122,17 @@
     .cp-this-month { font-size: 11px; color: var(--text2); margin-top: 4px; }
     .card-progress { cursor: pointer; transition: border-color 0.15s; }
     .card-progress:active { opacity: 0.85; }
+
+    /* 전월 실적 뱃지 */
+    .subsection-title { font-size: 11px; color: var(--text2); margin-bottom: 8px; font-weight: 600; letter-spacing: 0.5px; }
+    .prev-perf-list { background: var(--surface); border-radius: var(--radius); padding: 6px 14px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.04); }
+    .perf-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .perf-row:last-child { border-bottom: none; }
+    .perf-name { font-size: 13px; font-weight: 700; }
+    .perf-badge { font-size: 11px; padding: 3px 9px; border-radius: 6px; font-weight: 600; }
+    .perf-ok   { background: rgba(74,222,128,0.1);  color: var(--success); }
+    .perf-fail { background: rgba(248,113,113,0.1); color: var(--danger); }
+    .perf-neutral { background: rgba(144,144,176,0.12); color: var(--text2); }
     .cp-chevron { font-size: 12px; color: var(--text2); transition: transform 0.2s; display: inline-block; }
     .cp-chevron.open { transform: rotate(180deg); }
     .cp-benefits { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); }
@@ -192,6 +203,33 @@
     .danger-btn { background: rgba(248,113,113,0.12); color: var(--danger); border: 1px solid rgba(248,113,113,0.25); }
     .divider { height: 1px; background: rgba(255,255,255,0.06); margin: 14px 0; }
 
+    /* Lock screen */
+    .lock-screen {
+      display: none; position: fixed; inset: 0;
+      background: var(--bg); z-index: 9999;
+      flex-direction: column; align-items: center; justify-content: center;
+      padding: 32px;
+    }
+    .lock-screen.active { display: flex; }
+    .lock-icon { font-size: 48px; margin-bottom: 16px; }
+    .lock-title { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+    .lock-sub { font-size: 13px; color: var(--text2); margin-bottom: 32px; }
+    .lock-input {
+      width: 100%; max-width: 280px;
+      background: var(--surface); border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: 14px; padding: 14px 18px;
+      color: var(--text); font-size: 22px; letter-spacing: 6px;
+      text-align: center; outline: none; margin-bottom: 14px;
+    }
+    .lock-input:focus { border-color: var(--accent); }
+    .lock-btn {
+      width: 100%; max-width: 280px; padding: 14px;
+      background: var(--accent); color: white;
+      border: none; border-radius: 14px; font-size: 16px;
+      font-weight: 700; cursor: pointer;
+    }
+    .lock-error { font-size: 13px; color: var(--danger); margin-top: 10px; min-height: 18px; }
+
     /* History */
     .history-item {
       background: var(--surface2); border-radius: 10px;
@@ -204,6 +242,18 @@
   </style>
 </head>
 <body>
+
+<!-- Lock Screen -->
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-icon">🔒</div>
+  <div class="lock-title">카드 비서</div>
+  <div class="lock-sub">비밀번호를 입력해주세요</div>
+  <input class="lock-input" id="lockInput" type="password" inputmode="numeric"
+    maxlength="10" placeholder="••••••"
+    onkeydown="if(event.key==='Enter') tryUnlock()">
+  <button class="lock-btn" onclick="tryUnlock()">확인</button>
+  <div class="lock-error" id="lockError"></div>
+</div>
 
 <div class="header">
   <h1>💳 카드 비서</h1>
@@ -227,7 +277,7 @@
 
 <!-- 실적 현황 -->
 <div class="section">
-  <div class="section-title">전월 실적 현황</div>
+  <div class="section-title">실적 현황</div>
   <div id="progressBars"></div>
 </div>
 
@@ -460,8 +510,6 @@ function getBenefitUsed(cardId, catId) {
 }
 
 function getRateScore(card, catId) {
-  if (!isMetPerf(card)) return card.기본rate;
-
   const b = card.혜택[catId];
   if (!b) return card.기본rate;
 
@@ -527,12 +575,11 @@ function renderRec() {
   let benefitText = '';
   if (score === 0) {
     benefitText = '혜택 없음';
-  } else if (!metPerf && card.기본rate > 0) {
-    benefitText = `기본 ${fmtPct(card.기본rate)} 적립 (실적 미달성)`;
   } else if (b) {
-    if (b.type === '할인')       benefitText = `${fmtPct(b.rate)} 할인${b.비고 ? ` · ${b.비고}` : ''}`;
-    else if (b.type === '적립')  benefitText = `${fmtPct(b.rate)} 적립`;
+    if (b.type === '할인')         benefitText = `${fmtPct(b.rate)} 할인${b.비고 ? ` · ${b.비고}` : ''}`;
+    else if (b.type === '적립')    benefitText = `${fmtPct(b.rate)} 적립`;
     else if (b.type === '정액할인') benefitText = `${fmtWon(b.amount)} 청구할인${b.비고 ? ` · ${b.비고}` : ''}`;
+    if (!metPerf) benefitText += ' (전월실적 달성 시)';
   } else {
     benefitText = `기본 ${fmtPct(card.기본rate)} 적립`;
   }
@@ -607,9 +654,28 @@ function buildBenefitRows(card) {
 }
 
 function renderProgress() {
-  document.getElementById('progressBars').innerHTML = CARDS.map(card => {
-    const thisMonth = getThisMonthSpend(card.id);
+  // ── 전월 실적: 달성/미달성 뱃지만 표시 ──
+  const prevRows = CARDS.map(card => {
     const lastMonth = state.지난달실적[card.id] || 0;
+    const target    = card.실적조건;
+    if (target === 0) {
+      return `<div class="perf-row">
+        <span class="perf-name" style="color:${card.color}">${card.shortName}</span>
+        <span class="perf-badge perf-neutral">실적 조건 없음</span>
+      </div>`;
+    }
+    const done = lastMonth >= target;
+    return `<div class="perf-row">
+      <span class="perf-name" style="color:${card.color}">${card.shortName}</span>
+      <span class="perf-badge ${done ? 'perf-ok' : 'perf-fail'}">
+        ${done ? `✓ 달성 · ${fmtWon(lastMonth)}` : `✗ 미달성 · ${fmtWon(lastMonth)} / ${fmtWon(target)}`}
+      </span>
+    </div>`;
+  }).join('');
+
+  // ── 이번달 실적: 진행 바 + 다음달 혜택까지 얼마 남았는지 ──
+  const thisMonthRows = CARDS.map(card => {
+    const thisMonth = getThisMonthSpend(card.id);
     const target    = card.실적조건;
 
     const benefitSection = `
@@ -624,17 +690,18 @@ function renderProgress() {
           <div class="cp-header">
             <span class="cp-name" style="color:${card.color}">${card.name}</span>
             <span style="display:flex;gap:8px;align-items:center">
-              <span class="cp-amount">실적 조건 없음</span>
+              <span class="cp-amount">이번달 ${fmtWon(thisMonth)}</span>
               <span class="cp-chevron" id="chevron_${card.id}">▾</span>
             </span>
           </div>
-          <div class="cp-this-month">이번달 사용: ${fmtWon(thisMonth)}</div>
+          <div class="cp-this-month">실적 조건 없음 · 혜택 항상 적용</div>
           ${benefitSection}
         </div>`;
     }
 
-    const pct      = Math.min(100, Math.round((lastMonth / target) * 100));
-    const done     = lastMonth >= target;
+    const pct      = Math.min(100, Math.round((thisMonth / target) * 100));
+    const done     = thisMonth >= target;
+    const remain   = target - thisMonth;
     const cls      = done ? 'bar-done' : pct >= 70 ? 'bar-near' : 'bar-low';
     const pctColor = done ? 'var(--success)' : pct >= 70 ? 'var(--warning)' : 'var(--accent)';
 
@@ -643,19 +710,25 @@ function renderProgress() {
         <div class="cp-header">
           <span class="cp-name" style="color:${card.color}">${card.name}</span>
           <span style="display:flex;gap:8px;align-items:center">
-            <span class="cp-amount">${fmtWon(lastMonth)} / ${fmtWon(target)}</span>
+            <span class="cp-amount">이번달 ${fmtWon(thisMonth)} / ${fmtWon(target)}</span>
             <span class="cp-chevron" id="chevron_${card.id}">▾</span>
           </span>
         </div>
         <div class="bar-bg"><div class="bar-fill ${cls}" style="width:${pct}%"></div></div>
         <div class="cp-footer">
-          <span class="cp-pct" style="color:${pctColor}">${done ? '✓ 달성' : pct + '%'}</span>
-          <span class="cp-remain">${done ? '혜택 정상 적용 중' : fmtWon(target - lastMonth) + ' 부족'}</span>
+          <span class="cp-pct" style="color:${pctColor}">${done ? '✓ 달성!' : pct + '%'}</span>
+          <span class="cp-remain">${done ? '다음달 혜택 적용 예정 🎉' : '다음달 혜택까지 ' + fmtWon(remain) + ' 남음'}</span>
         </div>
-        <div class="cp-this-month">이번달 사용: ${fmtWon(thisMonth)}</div>
         ${benefitSection}
       </div>`;
   }).join('');
+
+  document.getElementById('progressBars').innerHTML = `
+    <div class="subsection-title">전월 실적</div>
+    <div class="prev-perf-list">${prevRows}</div>
+    <div class="subsection-title" style="margin-top:14px">이번달 실적 (다음달 혜택용)</div>
+    ${thisMonthRows}
+  `;
 }
 
 function toggleBenefits(cardId) {
@@ -875,6 +948,42 @@ function updateMonthBadge() {
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// ================================================================
+// Auth (7-day session)
+// ================================================================
+const AUTH_KEY  = 'cardBiseo_auth';
+const AUTH_PASS = '080711';
+const AUTH_TTL  = 7 * 24 * 60 * 60 * 1000;
+
+function checkAuth() {
+  try {
+    const exp = parseInt(localStorage.getItem(AUTH_KEY) || '0', 10);
+    if (Date.now() < exp) return true;
+  } catch(e) {}
+  return false;
+}
+
+function tryUnlock() {
+  const val = document.getElementById('lockInput').value;
+  if (val === AUTH_PASS) {
+    localStorage.setItem(AUTH_KEY, Date.now() + AUTH_TTL);
+    document.getElementById('lockScreen').classList.remove('active');
+    document.getElementById('lockInput').value = '';
+    document.getElementById('lockError').textContent = '';
+  } else {
+    const err = document.getElementById('lockError');
+    err.textContent = '비밀번호가 틀렸습니다.';
+    document.getElementById('lockInput').value = '';
+    document.getElementById('lockInput').focus();
+    setTimeout(() => { err.textContent = ''; }, 2000);
+  }
+}
+
+if (!checkAuth()) {
+  document.getElementById('lockScreen').classList.add('active');
+  setTimeout(() => document.getElementById('lockInput').focus(), 100);
 }
 
 loadState();
