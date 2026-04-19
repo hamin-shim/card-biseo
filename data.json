@@ -15,6 +15,13 @@
       "memo": "(주)비바리퍼블리카(토스) - KB Pay 아님, 혜택 미적용"
     },
     {
+      "date": "2026-04-16",
+      "cardId": "samsung-sfc7",
+      "amount": 0,
+      "category": "해외결제",
+      "memo": "OPENAI*CHATGPTSUBSCR (USD 22.0) (자동감지)"
+    },
+    {
       "date": "2026-04-18",
       "cardId": "samsung-sfc7",
       "amount": 7490,
@@ -24,8 +31,8 @@
   ],
   "지난달실적": {
     "shinhan-deepdream": 0,
-    "lotte-dept": 0,
-    "samsung-sfc7": 0,
+    "lotte-dept": 300000,
+    "samsung-sfc7": 300000,
     "kb-toktok": 0,
     "mg-better": 0
   },
