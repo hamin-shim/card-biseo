@@ -388,10 +388,11 @@ const CARDS = [
     실적제외: ['해외가맹점', '국세', '공공요금', '선불카드', '자동차판매', '택시', '대중교통'],
     혜택: {
       '카페':       { type: '할인', rate: 0.20, 월한도: 6000, 비고: '스타벅스·투썸·커피빈·메가·빽다방·컴포즈 (5천원 이상)' },
-      '온라인쇼핑': { type: '할인', rate: 0.20, 월한도: 6000, 비고: '쿠팡·무신사·지그재그·에이블리 + 네이버페이·카카오페이·페이코 (1만원 이상)' },
+      '온라인쇼핑': { type: '할인', rate: 0.20, 월한도: 6000, 비고: '쿠팡·무신사·지그재그·에이블리 (1만원 이상)' },
+      '모바일페이': { type: '할인', rate: 0.20, 월한도: 6000, 비고: '네이버페이·카카오페이·페이코 (1만원 이상)' },
     },
     기본rate: 0,
-    메모: '전월실적 30만원 이상 필요. 카페·온라인쇼핑 각 20% 할인, 월 한도 6,000원.'
+    메모: '전월실적 30만원 이상 필요. 카페·온라인쇼핑·모바일페이 각 20% 할인, 월 한도 6,000원.'
   },
   {
     id: 'samsung-sfc7',
@@ -405,7 +406,6 @@ const CARDS = [
       '마트':         { type: '정액할인', amount: 6000,  월한도: 6000,  비고: '이마트·이마트몰' },
       '카페':         { type: '적립',     rate: 0.015,   월한도: null },
       '음식점':       { type: '적립',     rate: 0.01,    월한도: null },
-      '주유':         { type: '적립',     rate: 0.01,    월한도: null,  비고: '리터당 40포인트' },
       '기타':         { type: '적립',     rate: 0.005,   월한도: null },
     },
     기본rate: 0.005,
@@ -425,11 +425,9 @@ const CARDS = [
       '롯데백화점':   { type: '적립', rate: 0.033, 월한도: 50000 },
       '신세계백화점': { type: '적립', rate: 0.033, 월한도: 50000 },
       '온라인쇼핑':   { type: '적립', rate: 0.011, 월한도: 50000 },
+      '모바일페이':   { type: '적립', rate: 0.011, 월한도: 50000 },
       '음식점':       { type: '적립', rate: 0.011, 월한도: 50000 },
       '배달':         { type: '적립', rate: 0.011, 월한도: 50000 },
-      '교통':         { type: '적립', rate: 0.011, 월한도: 50000 },
-      '주유':         { type: '적립', rate: 0.011, 월한도: 50000 },
-      '구독':         { type: '적립', rate: 0.011, 월한도: 50000 },
       '기타':         { type: '적립', rate: 0.011, 월한도: 50000 },
     },
     기본rate: 0.011,
@@ -444,10 +442,9 @@ const CARDS = [
     실적제외: ['무이자할부', '상품권', '선불카드충전', '국세', '지방세', '공과금', '아파트관리비', '연회비'],
     혜택: {
       '카페':       { type: '할인', rate: 0.50, 월한도: 10000, 비고: '스타벅스 전용' },
-      '구독':       { type: '할인', rate: 0.20, 월한도:  3000, 비고: '유튜브/넷플/웨이브/티빙' },
-      '온라인쇼핑': { type: '할인', rate: 0.10, 월한도:  3000, 비고: 'KB Pay 등 간편결제' },
+      '모바일페이': { type: '할인', rate: 0.10, 월한도:  3000, 비고: 'KB Pay 간편결제' },
+      '온라인쇼핑': { type: '할인', rate: 0.10, 월한도:  3000, 비고: 'KB Pay 간편결제' },
       '배달':       { type: '할인', rate: 0.05, 월한도:  5000, 비고: '배민·요기요' },
-      '교통':       { type: '할인', rate: 0.05, 월한도:  3000 },
     },
     기본rate: 0,
     메모: '전월실적 40만원 이상 필요. 카페는 스타벅스만 50% 할인.'
@@ -455,15 +452,13 @@ const CARDS = [
 ];
 
 const CATEGORIES = [
-  { id: '편의점',      emoji: '🏪', label: '편의점' },
   { id: '카페',        emoji: '☕', label: '카페' },
+  { id: '편의점',      emoji: '🏪', label: '편의점' },
   { id: '마트',        emoji: '🛒', label: '마트' },
   { id: '음식점',      emoji: '🍽️', label: '음식점' },
   { id: '배달',        emoji: '🛵', label: '배달' },
-  { id: '교통',        emoji: '🚇', label: '교통' },
-  { id: '주유',        emoji: '⛽', label: '주유' },
-  { id: '온라인쇼핑',  emoji: '🛍️', label: '온라인' },
-  { id: '구독',        emoji: '📺', label: '구독' },
+  { id: '온라인쇼핑',  emoji: '🛍️', label: '온라인쇼핑' },
+  { id: '모바일페이',  emoji: '📱', label: '모바일페이' },
   { id: '롯데백화점',  emoji: '🏬', label: '롯데백화점' },
   { id: '신세계백화점',emoji: '🏪', label: '신세계' },
   { id: '기타',        emoji: '💳', label: '기타' },
@@ -562,11 +557,18 @@ function renderRec() {
   if (!selectedCat) { sec.style.display = 'none'; return; }
   sec.style.display = 'block';
 
-  const ranked = CARDS.map(card => ({ card, score: getRateScore(card, selectedCat), metPerf: isMetPerf(card) }))
-    .sort((a, b) => {
-      if (a.metPerf !== b.metPerf) return a.metPerf ? -1 : 1;
-      return b.score - a.score;
-    });
+  const ranked = CARDS.map(card => ({
+    card,
+    score: getRateScore(card, selectedCat),
+    metPerf: isMetPerf(card),
+    hasSpecific: !!card.혜택[selectedCat],
+  })).sort((a, b) => {
+    // 달성+혜택 > 미달성+혜택 > 달성+기본rate > 미달성+기본rate
+    const tierA = a.hasSpecific ? (a.metPerf ? 0 : 1) : (a.metPerf ? 2 : 3);
+    const tierB = b.hasSpecific ? (b.metPerf ? 0 : 1) : (b.metPerf ? 2 : 3);
+    if (tierA !== tierB) return tierA - tierB;
+    return b.score - a.score;
+  });
   const { card, score } = ranked[0];
   const second = ranked[1];
 
