@@ -1,5 +1,13 @@
 {
-  "이번달사용": [],
+  "이번달사용": [
+    {
+      "date": "2026-04-18",
+      "cardId": "samsung-sfc7",
+      "amount": 7490,
+      "category": "롯데백화점",
+      "memo": "롯데백화점잠실점 (삼성카드 이번달 누적 392,495원)"
+    }
+  ],
   "지난달실적": {
     "shinhan-deepdream": 0,
     "lotte-dept": 0,
