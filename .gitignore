@@ -2,3 +2,10 @@
 telegram_raw.json
 __pycache__/
 *.pyc
+.DS_Store
+SESSION_LOG.md
+weakness.txt
+.watch_state.json
+.watch_sms.log
+.omc/
+lotte-card-*.jpeg
