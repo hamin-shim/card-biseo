@@ -240,6 +240,10 @@ def main():
     save_state({"seen_keys": list(seen_keys)[-500:]})
     if new_count > 0:
         git_push_data_json()
+    else:
+        kst = timezone(timedelta(hours=9))
+        now_str = datetime.now(kst).strftime("%m/%d %H:%M")
+        tg_send(f"📋 [{now_str}] 새 결제 내역 없음 (0건)")
     print(f"  완료: {len(txns)}건 조회, {new_count}건 신규 반영")
 
 
