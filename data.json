@@ -1,6 +1,20 @@
 {
   "이번달사용": [
     {
+      "date": "2026-04-15",
+      "cardId": "lotte-dept",
+      "amount": 94200,
+      "category": "롯데백화점",
+      "memo": "롯데백화점"
+    },
+    {
+      "date": "2026-04-16",
+      "cardId": "kb-toktok",
+      "amount": 143500,
+      "category": "기타",
+      "memo": "(주)비바리퍼블리카(토스) - KB Pay 아님, 혜택 미적용"
+    },
+    {
       "date": "2026-04-18",
       "cardId": "samsung-sfc7",
       "amount": 7490,
